@@ -12,6 +12,7 @@ import com.amazonaws.services.sqs.model.*;
 
 import java.io.FileInputStream;
 import java.util.*;
+import java.util.concurrent.*;
 
 import kafka.javaapi.producer.Producer;
 import kafka.producer.KeyedMessage;
@@ -21,8 +22,10 @@ import org.json.JSONObject;
 
 public class Shoveler {
     private BasicAWSCredentials credentials;
-    private AmazonSQS sqs;
+    private AmazonSQSClient sqs;
     private String QueueName = "prod_measured_raw"; //TODO: Do not hard code
+    private Producer producer;
+    private static BlockingQueue<String> queue;
 
     public Shoveler() {
         try {
@@ -31,7 +34,7 @@ public class Shoveler {
             ClientConfiguration config = new ClientConfiguration();
             config.setSocketTimeout(100000); // default is 50000
             config.setConnectionTimeout(100000);  //default is 50000
-            config.setMaxConnections(100); //default is 50
+            config.setMaxConnections(1000); //default is 50
 
             properties.load( new FileInputStream("/home/peterb/MATDF/Shoveler/aws.properties") ); //TODO: Do not hard code
             this.credentials = new   BasicAWSCredentials(properties.getProperty("aws_access_key_id"),
@@ -40,56 +43,105 @@ public class Shoveler {
             StaticCredentialsProvider credentialsProvider = new StaticCredentialsProvider(this.credentials);
             this.sqs = new AmazonSQSClient(credentialsProvider, config);
             this.sqs.setEndpoint("https://sqs.us-east-1.amazonaws.com");
+
+            // Setup Kafka Producer
+            Properties props = new Properties();
+            props.put("zk.connect", "p-kafka01.use01.plat.priv:2181");
+            props.put("metadata.broker.list", "p-kafka01.use01.plat.priv:9092, p-kafka92.use01.plat.priv:9092, p-kafka03.use01.plat.priv:9092");
+            props.put("serializer.class", "kafka.serializer.StringEncoder");
+            props.put("producer.type", "async");
+            props.put("compression.codec", "1");
+            this.producer = new Producer<Integer, String>(new ProducerConfig(props));
         } catch(Exception e){
             System.out.println("Exception while createing SQSUtility : " + e);
         }
     }
 
-    // TODO: Comments
-    private List<Message> getMessagesFromSQS(String queueUrl) {
-        ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest(queueUrl);
-        List<Message> messages = sqs.receiveMessage(receiveMessageRequest).getMessages();
-        return messages;
+    public void run() {
+        this.queue = new ArrayBlockingQueue(5120);   //TODO: Hard coded to 10 full message sets + slack
+        
+        SQSConsumer consumer = new SQSConsumer(this.queue, this.sqs, "prod_measured_raw");
+        KafkaProducer producer = new KafkaProducer(this.queue, this.producer, "prod_measured_raw");
+
+        new Thread(consumer).start();
+        new Thread(producer).start();
+        
+        try {
+            Thread.sleep(20);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("Done!");
     }
 
-    public void run() {
-        // Setup Kafka Producer
-        Properties props = new Properties();
-        props.put("zk.connect", "p-kafka01.use01.plat.priv:2181");
-        props.put("metadata.broker.list", "p-kafka01.use01.plat.priv:9092, p-kafka92.use01.plat.priv:9092, p-kafka03.use01.plat.priv:9092");
-        props.put("serializer.class", "kafka.serializer.StringEncoder");
-        props.put("producer.type", "async");
-        props.put("compression.codec", "1");
+    private static class SQSConsumer implements Runnable {
 
-        List<KeyedMessage<String, String>> batchedMessages = new ArrayList<KeyedMessage<String, String>>();
-        // Gets the queue object from the name
-        String queueUrl = this.sqs.getQueueUrl(this.QueueName).getQueueUrl();
+        protected BlockingQueue<String> queue = null;
+        protected AmazonSQSClient sqsQueue = null;
+        protected String queueName;
 
-        Producer producer = new Producer<Integer, String>(new ProducerConfig(props));
+        public SQSConsumer(BlockingQueue<String> queue, AmazonSQSClient sqs, String queueName) {
+            this.queue = queue;
+            this.sqsQueue = sqs;
+            this.queueName = queueName;
+        }
 
-        while( true ) {
+        public void run() {
+            // Gets the queue object from the name
+            String queueUrl = this.sqsQueue.getQueueUrl(this.queueName).getQueueUrl();
+
             List<Message> sqsMessages = new ArrayList<Message>();
-            
-            while (sqsMessages.size() < 100) {
-                System.out.println("Appended " + sqsMessages.size() + " messages");
-                sqsMessages.addAll( this.getMessagesFromSQS(queueUrl) );
-            }
-
-            for( Message msg : sqsMessages ) {
+            ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest(queueUrl);
+            while ( true ) {
+                // Get new messages and append to shared queue
                 try {
-                    JSONObject obj = new JSONObject(msg.getBody());
-                    Iterator keys = obj.keys();
-                    while( keys.hasNext() ) {
-                        String key = (String)keys.next();
-                        batchedMessages.add( new KeyedMessage<String, String>(this.QueueName,obj.get(key).toString()));
+                    sqsMessages.addAll( this.sqsQueue.receiveMessage(receiveMessageRequest).getMessages() );
+                    for ( Message msg : sqsMessages ) {
+                        this.queue.put(msg.getBody());
+                    }
+                } catch (Exception e) {
+                    System.out.println("Son of a nutcracker...\n" + e);
+                }
+            }
+        }
+    }
 
-                        if (batchedMessages.size() > 500) {
-                            producer.send(batchedMessages);
-                            System.out.println("Wrote " + batchedMessages.size() + " to " + this.QueueName + " hopefully...");
-                            batchedMessages.clear();
+    private static class KafkaProducer implements Runnable {
+        protected BlockingQueue<String> queue = null;
+        protected Producer producer;
+        protected String queueName;
+
+        public KafkaProducer(BlockingQueue<String> queue, Producer producer, String queueName) {
+            this.queue = queue;
+            this.producer = producer;
+            this.queueName = queueName;
+        }
+        
+        public void run() {
+            System.out.println("Starting Producer!");
+            List<KeyedMessage<String, String>> batchedMessages = new ArrayList<KeyedMessage<String, String>>();
+
+            // TODO: Change this to not stop the second the queue is empty
+            while( true ) {
+                try {
+                    String json_msg = "";
+                    while ( batchedMessages.size() < 500 ) {
+                        json_msg = this.queue.take().toString();
+
+                        JSONObject obj = new JSONObject(json_msg);
+                        Iterator keys = obj.keys();
+                        while( keys.hasNext() ) {
+                            String key = (String)keys.next();
+                            batchedMessages.add( new KeyedMessage<String, String>(this.queueName,obj.get(key).toString()));
+
+                            if (batchedMessages.size() >= 500) {
+                                this.producer.send(batchedMessages);
+                                System.out.println("Wrote " + batchedMessages.size() + " to " + this.queueName);
+                                batchedMessages.clear();
+                            }
                         }
                     }
-
                 } catch (Exception e) {
                     System.out.println("Oh hot damm... \n" + e);
                 }
