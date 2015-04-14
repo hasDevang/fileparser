@@ -1,6 +1,6 @@
 package com.tune.test;
 
-import Shoveler.Shoveler;
+import com.tune.Shoveler.Shoveler;
 
 public class test {
     Shoveler shoveler;

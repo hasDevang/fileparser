@@ -14,15 +14,13 @@ import com.amazonaws.services.sqs.model.*;
 import java.io.FileInputStream;
 import java.util.*;
 import java.util.concurrent.*;
-//Jackson JSON parser
-import org.codehaus.jackson.*;
-import org.codehaus.jackson.map.*;
 
 import kafka.javaapi.producer.Producer;
 import kafka.producer.KeyedMessage;
 import kafka.producer.ProducerConfig;
 
-import org.json.JSONObject;
+import org.json.simple.*;
+import org.json.simple.parser.*;
 
 public class Shoveler {
     private BasicAWSCredentials credentials;
@@ -40,7 +38,7 @@ public class Shoveler {
             config.setConnectionTimeout(100000);  //default is 50000
             config.setMaxConnections(100); //default is 50
 
-            properties.load( new FileInputStream("/home/peterb/Shoveler/aws.properties") ); //TODO: Do not hard code
+            properties.load( new FileInputStream("/home/peterb/MATDF/com/tune/Shoveler/aws.properties") ); //TODO: Do not hard code
             this.credentials = new   BasicAWSCredentials(properties.getProperty("aws_access_key_id"),
                                                          properties.getProperty("aws_secret_access_key"));
 
@@ -66,8 +64,8 @@ public class Shoveler {
         this.queue = new ArrayBlockingQueue(4096); // TODO: Hard coded
     
         // TODO: Remove hard coded pool size, consumers, and queue names
-        ExecutorService executor = Executors.newFixedThreadPool(50);
-        for (int i = 0; i < 9; ++i ){
+        ExecutorService executor = Executors.newFixedThreadPool(10);
+        for (int i = 0; i < 1; ++i ){
             Runnable worker = new SQSConsumer(this.queue, this.sqs, "prod_measured_raw");
             executor.execute(worker);
         }
@@ -141,6 +139,7 @@ public class Shoveler {
             long newTime = 0;
 
             long startNew = System.currentTimeMillis();
+            JSONParser parser = new JSONParser();
             while( true ) {
                 try {
                     String json_msg = "";
@@ -148,49 +147,21 @@ public class Shoveler {
                         startNew = System.currentTimeMillis();
                     }
 
-                    json_msg = this.queue.take().toString();
-                    
-                    // Jackson Method
-                    JsonFactory f = new JsonFactory();
-                    JsonParser jp = f.createJsonParser(json_msg);
-                    jp.nextToken();
-
-                    while(jp.nextToken() == JsonToken.START_OBJECT) {
-                        ObjectMapper mapper = new ObjectMapper();
-                        Payload payload = mapper.readValue(jp, Payload.class);
-                        batchedMessages.add( new KeyedMessage<String, byte[]>(this.queueName, payload.value));
-
+                    JSONObject obj = (JSONObject)parser.parse(this.queue.take().toString());
+                    JSONArray array = obj.getJSONArray();
+                    for (int i = 0; i < array.size(); ++i ) {
+                        String key = (String)array.get(i);
+                        batchedMessages.add( new KeyedMessage<String, byte[]>(this.queueName, key.getBytes("utf-8")));
                         if (batchedMessages.size() >= 250) {
                             newTime += System.currentTimeMillis() - startNew;
                             newCount += 1;
                             System.out.println("(" + batchedMessages.size() + ") - Test: " + newTime/newCount + " - SQSSize: " + this.queue.size());
                             this.producer.send(batchedMessages);
-
                             newCount = 0;
                             newTime = 0;
                             batchedMessages.clear();
                         }
-                    }
-
-                    // Normal Method
-                    /*
-                    JSONObject obj = new JSONObject(json_msg);
-                    Iterator keys = obj.keys();
-                    while( keys.hasNext() ) {
-                        String key = (String)keys.next();
-                        batchedMessages.add( new KeyedMessage<String, byte[]>(this.queueName, obj.get(key).toString().getBytes("utf-8")));
-
-                        if (batchedMessages.size() >= 250) {
-                            newTime += System.currentTimeMillis() - startNew;
-                            newCount += 1;
-                            System.out.println("(" + batchedMessages.size() + ") - Test: " + newTime/newCount + " - SQSSize: " + this.queue.size());
-                            this.producer.send(batchedMessages);
-
-                            newCount = 0;
-                            newTime = 0;
-                            batchedMessages.clear();
-                        }
-                    }*/
+                    }   
                 } catch (Exception e) {
                     System.out.println("Oh hot damm... \n" + e);
                 }
