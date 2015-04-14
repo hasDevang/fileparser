@@ -1,4 +1,4 @@
-package Shoveler;
+package com.tune.Shoveler;
 
 import com.amazonaws.ClientConfiguration;
 
@@ -10,9 +10,13 @@ import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClient;
 import com.amazonaws.services.sqs.model.*;
 
+//Json parser
 import java.io.FileInputStream;
 import java.util.*;
 import java.util.concurrent.*;
+//Jackson JSON parser
+import org.codehaus.jackson.*;
+import org.codehaus.jackson.map.*;
 
 import kafka.javaapi.producer.Producer;
 import kafka.producer.KeyedMessage;
@@ -119,6 +123,10 @@ public class Shoveler {
         protected Producer producer;
         protected String queueName;
 
+        private class Payload { 
+            public byte[] value;
+        }
+
         public KafkaProducer(BlockingQueue<String> queue, Producer producer, String queueName) {
             this.queue = queue;
             this.producer = producer;
@@ -141,6 +149,31 @@ public class Shoveler {
                     }
 
                     json_msg = this.queue.take().toString();
+                    
+                    // Jackson Method
+                    JsonFactory f = new JsonFactory();
+                    JsonParser jp = f.createJsonParser(json_msg);
+                    jp.nextToken();
+
+                    while(jp.nextToken() == JsonToken.START_OBJECT) {
+                        ObjectMapper mapper = new ObjectMapper();
+                        Payload payload = mapper.readValue(jp, Payload.class);
+                        batchedMessages.add( new KeyedMessage<String, byte[]>(this.queueName, payload.value));
+
+                        if (batchedMessages.size() >= 250) {
+                            newTime += System.currentTimeMillis() - startNew;
+                            newCount += 1;
+                            System.out.println("(" + batchedMessages.size() + ") - Test: " + newTime/newCount + " - SQSSize: " + this.queue.size());
+                            this.producer.send(batchedMessages);
+
+                            newCount = 0;
+                            newTime = 0;
+                            batchedMessages.clear();
+                        }
+                    }
+
+                    // Normal Method
+                    /*
                     JSONObject obj = new JSONObject(json_msg);
                     Iterator keys = obj.keys();
                     while( keys.hasNext() ) {
@@ -157,7 +190,7 @@ public class Shoveler {
                             newTime = 0;
                             batchedMessages.clear();
                         }
-                    }
+                    }*/
                 } catch (Exception e) {
                     System.out.println("Oh hot damm... \n" + e);
                 }
