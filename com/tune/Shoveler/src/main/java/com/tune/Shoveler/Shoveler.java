@@ -148,10 +148,9 @@ public class Shoveler {
                     }
 
                     JSONObject obj = (JSONObject)parser.parse(this.queue.take().toString());
-                    JSONArray array = obj.getJSONArray();
-                    for (int i = 0; i < array.size(); ++i ) {
-                        String key = (String)array.get(i);
-                        batchedMessages.add( new KeyedMessage<String, byte[]>(this.queueName, key.getBytes("utf-8")));
+                    Set<String> keys = obj.keySet();
+                    for (String key : keys ) {
+                        batchedMessages.add( new KeyedMessage<String, byte[]>(this.queueName, obj.get(key).toString().getBytes("utf-8")));
                         if (batchedMessages.size() >= 250) {
                             newTime += System.currentTimeMillis() - startNew;
                             newCount += 1;
