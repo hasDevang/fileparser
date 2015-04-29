@@ -20,6 +20,13 @@ public class KafkaProducer implements Runnable {
         public byte[] value;
     }
 
+    /**
+     * Constructor for Kafka Producer
+     * 
+     * @param queue	Shared blocking queue
+     * @param producer
+     * @param queueName	SQS queue name
+     */
     public KafkaProducer(BlockingQueue<String> queue, Producer producer, String queueName) {
         this.queue = queue;
         this.producer = producer;
@@ -27,19 +34,19 @@ public class KafkaProducer implements Runnable {
     }
      
     public void run() {
-        List<KeyedMessage<String, byte[]>> batchedMessages = new ArrayList<KeyedMessage<String, byte[]>>();
-        long JsonCount = 0;
-        long JsonTime = 0;
+        List<KeyedMessage<String, byte[]>> batchedMessages = new ArrayList<KeyedMessage<String, byte[]>>();	// temporary list to store messages for Kafka
+//        long JsonCount = 0;
+//        long JsonTime = 0;
         long newCount = 0;
         long newTime = 0;
 
         long startNew = System.currentTimeMillis();
-        JSONParser parser = new JSONParser();
+        JSONParser parser = new JSONParser();	// json parer using json simple
         
-        StringBuilder sb = new StringBuilder();
 		while (true) {
+			// parse json text from shared blocking queue and send 250 log messages per Kafka queue 
 			try {
-				String json_msg = "";
+//				String json_msg = "";
 				if (batchedMessages.size() == 0) {
 					startNew = System.currentTimeMillis();
 				}
@@ -50,6 +57,7 @@ public class KafkaProducer implements Runnable {
 				for (String key : keys) {
 					
 					batchedMessages.add(new KeyedMessage<String, byte[]>(this.queueName, obj.get(key).toString().getBytes("utf-8")));
+					// Recieves 250 messages from blocking queue and feed into Kafka queue
 					if (batchedMessages.size() >= 250) {
 						newTime += System.currentTimeMillis() - startNew;
 						newCount += 1;
