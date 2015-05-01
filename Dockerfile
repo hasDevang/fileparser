@@ -22,7 +22,7 @@ RUN mvn --version
 
 # copy git-pulled from outside of docker Shovler code base into docker container 
 RUN mkdir -p /usr/local/bin/shoveler
-ADD MATDF /usr/local/bin/shoveler/
+ADD . /usr/local/bin/shoveler/
 
 # maven build for runnable jar 
 WORKDIR /usr/local/bin/shoveler
