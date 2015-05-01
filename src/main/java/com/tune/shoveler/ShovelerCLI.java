@@ -15,6 +15,7 @@ import com.tune.shoveler.Shoveler;
 public class ShovelerCLI {
 	
 	Shoveler shoveler;
+	
 	private interface Arguments {
 
         @Option( shortName="p", longName = "producer", description = "Number of producer", defaultValue="1" )
