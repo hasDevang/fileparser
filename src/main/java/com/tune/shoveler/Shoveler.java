@@ -72,10 +72,11 @@ public class Shoveler {
 		// Setup Kafka Producer
 		// TODO: should not hard code
 		Properties props = new Properties();
-		props.put("zk.connect", "p-kafka01.use01.plat.priv:2181");
 		props.put("metadata.broker.list", "p-kafka01.use01.plat.priv:9092,p-kafka02.use01.plat.priv:9092,p-kafka03.use01.plat.priv:9092");
 		props.put("producer.type", "async"); // use asynchronous mode since message comes in unordered
 		props.put("compression.codec", "gzip"); // use GZip compressed format
+		props.put("request.required.acks","0" );	// explicitly set as default value. producer never waits for an acknowledgement from the broke
+		props.put("serializer.class", "kafka.serializer.DefaultEncoder" ); // explicitly set as default value. this takes a byte[] and returns the same byte[]
 	
 		this.producer = new Producer<Integer, String>(new ProducerConfig(props));
 
