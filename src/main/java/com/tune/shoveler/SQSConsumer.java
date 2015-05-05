@@ -46,7 +46,9 @@ public class SQSConsumer implements Runnable {
 
 			sqsMessages.addAll(this.sqsQueue.receiveMessage(receiveMessageRequest).getMessages());
 			for (Message msg : sqsMessages) {
-				logger.debug(msg.getBody() + " added to the blocking queue");
+				if(logger.isDebugEnabled()){
+					logger.debug(msg.getBody() + " added to the blocking queue");
+				}
 				try {
 					this.queue.put(msg.getBody());
 				} catch (InterruptedException e) {
