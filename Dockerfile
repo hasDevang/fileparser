@@ -30,8 +30,4 @@ RUN mvn package
 
 # run shoveler
 WORKDIR /var/has/mat-df/shoveler/target
-
-# manually add aws credential file. 
-# TODO:// This will be replaced by configuration injection
-ADD aws.properties /var/has/mat-df/shoveler/
-CMD ["java", "-jar", "MATDF-shoveler-0.0.1.jar", "-c", "9", "-p", "2","-a","../aws.properties"]
+CMD ["java", "-jar", "MATDF-shoveler-0.0.1.jar"]
