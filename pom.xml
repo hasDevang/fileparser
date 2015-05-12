@@ -31,7 +31,7 @@
 							<addClasspath>true</addClasspath>
 							<classpathMavenRepositoryLayout>true</classpathMavenRepositoryLayout>
 							<classpathPrefix>${user.home}/.m2/repository</classpathPrefix>
-							<mainClass>com.tune.shoveler.ShovelerCLI</mainClass>
+							<mainClass>com.tune.shoveler.ShovelerDriver</mainClass>
 						</manifest>
 						
 					</archive>
