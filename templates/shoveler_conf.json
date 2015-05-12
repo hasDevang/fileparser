@@ -1,0 +1,10 @@
+{
+  "aws" : {
+        "aws_access_key_id":{{aws_access_key_id}},
+        "aws_secret_access_key":{{aws_secret_access_key}}
+    },
+    "no_consumer": {{no_consumer}},
+    "no_producer": {{no_producer}},
+    "pool_size": {{pool_size}},
+    "sqs_name": {{sqs_name}}
+}

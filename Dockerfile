@@ -21,16 +21,17 @@ ENV PATH=${M2_HOME}/bin:${PATH}
 RUN mvn --version
 
 # copy git-pulled from outside of docker Shovler code base into docker container 
-RUN mkdir -p /usr/local/bin/shoveler
-ADD . /usr/local/bin/shoveler/
+RUN mkdir -p /var/has/mat-df/shoveler
+ADD . /var/has/mat-df/shoveler/
 
 # maven build for runnable jar 
-WORKDIR /usr/local/bin/shoveler
+WORKDIR /var/has/mat-df/shoveler
 RUN mvn package
 
 # run shoveler
-WORKDIR /usr/local/bin/shoveler/target
+WORKDIR /var/has/mat-df/shoveler/target
 
-# manually add aws credential file. TODO:// secure way needed
-ADD aws.properties /usr/local/bin/shoveler/
+# manually add aws credential file. 
+# TODO:// This will be replaced by configuration injection
+ADD aws.properties /var/has/mat-df/shoveler/
 CMD ["java", "-jar", "MATDF-shoveler-0.0.1.jar", "-c", "9", "-p", "2","-a","../aws.properties"]
