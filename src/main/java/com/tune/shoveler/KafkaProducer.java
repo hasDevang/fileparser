@@ -78,12 +78,12 @@ public class KafkaProducer implements Runnable {
                     }
                 }
             } catch (ClassCastException e) {
-                System.err.println("ClassCastException when parsing " + input);
+                logger.error("ClassCastException when parsing " + input);
                 e.printStackTrace();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } catch (ParseException e) {
-                System.err.println("ParseException when parsing " + input);
+                logger.error("ParseException when parsing " + input);
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }

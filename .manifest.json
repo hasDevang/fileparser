@@ -125,7 +125,8 @@
          "local":{  
             "containerShip":{  
                "address":"https://dp-yoon02-dev.sea1.office.priv:2376",
-               "sslCertPath":"/etc/docker/certs/client/dev/"
+               "sslCertPath":"/etc/docker/certs/client/dev/",
+               "verify": false
             },
             "deploy":{  
                "shippingPort":{  
@@ -150,7 +151,12 @@
                },
                "sourceTag":"latest"
             },
-            "export":{  
+            "export":{
+               "containerShip":{  
+                  "address":"https://sea1-jenkins-docker02.sea1.office.priv:2376",
+                  "sslCertPath":"/etc/docker/certs/client/production/",
+                  "verify": true
+               },
                "receivingPort":{  
                   "address":"https://o-pregister-sea1.ops.tune.com",
                   "sslCertPath":"/etc/docker/certs/registry/build",
@@ -171,7 +177,7 @@
                   "attach":true,
                   "build":false,
                   "dependencies":true,
-                  "dynamicConfigs":true,
+                  "dynamicConfigs": false,
                   "cleanUp":true,
                   "export":true,
                   "testRun":true
