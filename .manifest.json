@@ -130,16 +130,8 @@
             },
             "deploy":{  
                "shippingPort":{  
-                  "address":"https://o-pregister-sea1.ops.tune.com",
-                  "sslCertPath": "/etc/docker/certs/registry/build",
-                  "verify":false,
-                  "auth":{  
-                     "type":"dynamic",
-                     "address":"https://o-regrubber-sea1.ops.tune.com",
-                     "path":"dregister_users",
-                     "sslCertPath": "/etc/docker/certs/registry/build",
-                     "verify":false
-                  }
+                  "address":"https://docker-dev.ops.tune.com",
+                  "verify":false
                },
                "shippingInstructions":{  
                   "attach":false,
@@ -149,7 +141,7 @@
                   "cleanUp":false,
                   "export":false
                },
-               "sourceTag":"latest"
+               "sourceTag":"local-production-latest"
             },
             "export":{
                "containerShip":{  
