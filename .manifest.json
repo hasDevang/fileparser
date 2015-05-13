@@ -136,7 +136,7 @@
                "shippingInstructions":{  
                   "attach":false,
                   "build":false,
-                  "dependencies":true,
+                  "dependencies":false,
                   "deploy":true,
                   "cleanUp":false,
                   "export":false
@@ -183,8 +183,8 @@
          },
          "sea1":{  
             "containerShip":{  
-               "address":"https://p-shoveler01-1a.sea1.office.priv:2376",
-               "sslCertPath":"/etc/docker/certs/client/dev/"
+               "address":"https://p-shoveler01.sea1.office.priv:2376",
+               "sslCertPath":"/etc/docker/certs/client/production/"
             },
             "deploy":{  
                "shippingPort":{  
@@ -204,19 +204,31 @@
             },
             "export":{  
                "containerShip":{  
-                  "address":"https://127.0.0.1:2376",
-                  "sslCertPath":"/etc/docker/certs/client/dev/cert.pem",
-                  "verify":false
+                  "address":"https://sea1-jenkins-docker02.sea1.office.priv:2376",
+                  "sslCertPath":"/etc/docker/certs/client/production/",
+                  "verify": true
                },
                "receivingPort":{  
+                  "address":"https://o-pregister-sea1.ops.tune.com",
+                  "sslCertPath":"/etc/docker/certs/registry/build",
+                  "verify":false,
+                  "auth":{  
+                     "type":"dynamic",
+                     "address":"https://o-regrubber-sea1.ops.tune.com",
+                     "path":"dregister_users",
+                     "sslCertPath":"/etc/docker/certs/registry/build",
+                     "verify":false
+                  }
+               },
+               "shippingPort":{  
                   "address":"https://docker-dev.ops.tune.com",
                   "verify":true
                },
                "shippingInstructions":{  
                   "attach":true,
                   "build":false,
-                  "dependencies":false,
-                  "dynamicConfigs":true,
+                  "dependencies":true,
+                  "dynamicConfigs": false,
                   "cleanUp":true,
                   "export":true,
                   "testRun":true
