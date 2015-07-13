@@ -1,0 +1,10 @@
+namespace com.tune;
+
+table TestFBS{
+    advertiser_name:string;
+    advertiser_id:int;
+    app_name:string;
+    attributable_type : string ;
+}
+
+root_type TestFBS;
