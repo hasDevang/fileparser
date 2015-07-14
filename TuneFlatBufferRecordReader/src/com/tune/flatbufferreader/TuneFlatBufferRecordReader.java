@@ -63,9 +63,10 @@ public class TuneFlatBufferRecordReader implements RecordReader {
 	 * Returns int representing the number of bytes read. 
 	 */
 	@Override
-	public int next(Writable r) throws IOException {
+	public int next(Writable arg0) throws IOException {
 		
-		
+		if(fileInputStream != null)
+		{
 		byte[] blobSize = new byte[4];
 		Integer readBytes = 0;
 		while (4 - readBytes > 0) 
@@ -82,7 +83,10 @@ public class TuneFlatBufferRecordReader implements RecordReader {
 		}
 		
 		bytes = new BytesWritable(binaryBlob);
-		return bytes.getSize();
+		return bytes.getCapacity();
+		}
+		close();
+		return 0;
 	}
 	
 	/**
@@ -112,7 +116,7 @@ public class TuneFlatBufferRecordReader implements RecordReader {
 
 	public static List<Object> getObjectBuffer(BytesWritable blob) throws IOException 
 	{
-		System.out.println("in the getobjectbuffer :"+ blob.getSize());
+		
 		ByteBuffer byte_buffer = ByteBuffer.wrap(blob.getBytes());
 		Rawlog raw_log= Rawlog.getRootAsrawLog(byte_buffer);
 		

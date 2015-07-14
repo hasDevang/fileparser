@@ -1,12 +1,8 @@
 package test;
 
-import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.sql.Time;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.zip.GZIPInputStream;
@@ -16,15 +12,15 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BytesWritable;
-import org.json.JSONException;
-import com.sun.jersey.api.client.filter.GZIPContentEncodingFilter;
+
+
+
 import com.tune.flatbufferreader.TuneFlatBufferRecordReader;
-import com.twitter.chill.Base64.InputStream;
 
 public class TestRecordReader {
 	
 	//static JSONObject jsonArray;
-	public static void main(String[] args) throws SQLException, IOException, ClassNotFoundException, JSONException, InterruptedException
+	public static void main(String[] args) throws SQLException, IOException, ClassNotFoundException, InterruptedException
 	{
 		if(args.length != 0)
 		{
@@ -43,11 +39,22 @@ public class TestRecordReader {
 				BytesWritable r = (BytesWritable) inter.createRow();   //Getting the blank WritableBytes from the createRow Method.
 				int readedbytes = inter.next(r); // Reads the first Binary FlatBuffer and returns the number of bytes written(blob size).
 				r= inter.getBytes();
-				System.out.print("number of bytes read: "+readedbytes);
-				List<Object> result = TuneFlatBufferRecordReader.getObjectBuffer(r); //Parse the FlatBuffer blob into Object List.
-				System.out.println("Some objects from the list retruned: "+ result.get(0)+ " "+ result.get(2));
+				if(readedbytes >0)
+				{
+				List<Object> result = TuneFlatBufferRecordReader.getObjectBuffer(r);
+				System.out.println("Reader size: "+ readedbytes);
+				System.out.println("Result from the change: "+ result.get(0)+ " "+ result.get(2));
+				
+				}else
+				{
+					ArrayList<Object> afobj = new ArrayList<Object>();
+					System.out.println("Reader size: "+ readedbytes);
+					//System.out.println("Result from the change: "+ result.get(0)+ " "+ result.get(2));
+					System.out.println("Reach the end of the file");
+					return;
+				}
 			}
-			inter.close();
+			
 			return;
 		}
 	
