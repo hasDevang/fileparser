@@ -1,6 +1,5 @@
 package play;
 
-
 import java.awt.List;
 import java.beans.Statement;
 import java.io.BufferedReader;
@@ -81,6 +80,7 @@ public class Redere {
 		ArrayList<String> patterns = new ArrayList<String>();
 		ArrayList<Integer> advertiser_id = new ArrayList<Integer>();
 		ArrayList<Integer> prison_id = new ArrayList<Integer>();
+		ArrayList<Integer> producer_id = new ArrayList<Integer>();
 
 		JSONParser parser = new JSONParser();
 		try {
@@ -94,9 +94,11 @@ public class Redere {
 		}
 
 		JSONArray ad_Id = (JSONArray) jsonArray.get("Advertiser_ID");
+		//gets advertiser ids based on given json file.
 		for (int i = 0; i < ad_Id.size(); i++) {
 			advertiser_id.add(Integer.parseInt((String) ad_Id.get(i)));
 		}
+		//takes dates as format of max date and min date.
 		String[] min = ((String) jsonArray.get("Min")).split(" ");
 		String[] max = ((String) jsonArray.get("Max")).split(" ");
 		String[] mindate = min[0].split("-");
@@ -112,27 +114,28 @@ public class Redere {
 				Integer.parseInt(mintime[1]), Integer.parseInt(mintime[2]));
 		Time endtime = new Time(Integer.parseInt(maxtime[0]),
 				Integer.parseInt(maxtime[1]), Integer.parseInt(maxtime[2]));
-
-		JSONArray p_id = (JSONArray) jsonArray.get("Prison_ID");
 		
+		//reads prison id from json file
+		JSONArray p_id = (JSONArray) jsonArray.get("Prison_ID");
 		for (int i = 0; i < p_id.size(); i++) {
 			prison_id.add(Integer.parseInt((String) p_id.get(i)));
 		}
 
-		ArrayList<Integer> producer_id = new ArrayList<Integer>();
+		//reads producer id from given json file.
 		JSONArray pro_id = (JSONArray) jsonArray.get("Producer_ID");
 		for (int i = 0; i < pro_id.size(); i++) {
 			producer_id.add(Integer.parseInt((String) pro_id.get(i)));
 		}
-
+		
+		//gets revision id.
 		String revision_id = (String) jsonArray.get("Revision_ID");
-
+		//gets sequence id.
 		String sequence_num = (String) jsonArray.get("Sequence_num");
-
+		
 		Configuration conf = new Configuration();
 		conf.addResource(new Path(args[1]));
 		FileSystem fs1 = FileSystem.get(conf);
-
+		
 		Utility.getfoldernames(folders, startdate, enddate);
 
 		Utility.getpatterns(patterns, startdate, enddate, revision_id,
@@ -145,4 +148,3 @@ public class Redere {
 
 }
 
-		
