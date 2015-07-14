@@ -75,12 +75,12 @@ public class Redere {
 		}
 
 		System.out.println("Starting the parser");
-		ArrayList<String> files = new ArrayList<String>();
-		ArrayList<String> folders = new ArrayList<String>();
-		ArrayList<String> patterns = new ArrayList<String>();
-		ArrayList<Integer> advertiser_id = new ArrayList<Integer>();
-		ArrayList<Integer> prison_id = new ArrayList<Integer>();
-		ArrayList<Integer> producer_id = new ArrayList<Integer>();
+		List<String> files = new ArrayList<String>();
+		List<String> folders = new ArrayList<String>();
+		List<String> patterns = new ArrayList<String>();
+		List<Integer> advertiser_id = new ArrayList<Integer>();
+		List<Integer> prison_id = new ArrayList<Integer>();
+		List<Integer> producer_id = new ArrayList<Integer>();
 
 		JSONParser parser = new JSONParser();
 		try {
@@ -136,12 +136,12 @@ public class Redere {
 		conf.addResource(new Path(args[1]));
 		FileSystem fs1 = FileSystem.get(conf);
 		
-		Utility.getfoldernames(folders, startdate, enddate);
+		folders = Utility.getfoldernames(folders, startdate, enddate);
 
-		Utility.getpatterns(patterns, startdate, enddate, revision_id,
+		patterns = Utility.getpatterns(patterns, startdate, enddate, revision_id,
 				producer_id, sequence_num, advertiser_id, prison_id);
 
-		Utility.getfiles(files, folders, patterns, fs1);
+		files = Utility.getfiles(files, folders, patterns, fs1);
 
 		Utility.getdata(files, starttime, endtime, conf, driverName);
 	}
