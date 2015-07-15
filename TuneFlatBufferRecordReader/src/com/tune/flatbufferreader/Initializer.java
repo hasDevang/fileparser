@@ -59,12 +59,12 @@ public class Initializer {
 		JSONParser parser = new JSONParser();
 		try {
 
-<<<<<<< HEAD
+
 			//Object obj = parser.parse(new FileReader("/home/devang/Desktop/IMP/property.json"));
 			Object obj = parser.parse(new FileReader("/home/hadoop/devang/property.json"));
-=======
+
 			Object obj = parser.parse(new FileReader(args[0]));
->>>>>>> a0f3288127d8afe54500e5bb50ee75a2522f7dde
+
 			jsonArray = (JSONObject) obj;
 
 		} catch (ParseException e) {
@@ -85,7 +85,7 @@ public class Initializer {
 		String[] mintime = min[1].split(":");
 		String[] maxtime = max[1].split(":");
 		System.out.println("min" + min[0]);
-<<<<<<< HEAD
+
 		Date startdate = new Date(Integer.parseInt(mindate[0]),
 				Integer.parseInt(mindate[1]) - 1, Integer.parseInt(mindate[2]));
 		Date enddate = new Date(Integer.parseInt(maxdate[0]),
@@ -94,9 +94,7 @@ public class Initializer {
 				Integer.parseInt(mintime[1]), Integer.parseInt(mintime[2]));
 		Time endtime = new Time(Integer.parseInt(maxtime[0]),
 				Integer.parseInt(maxtime[1]), Integer.parseInt(maxtime[2]));
-=======
-	
->>>>>>> a0f3288127d8afe54500e5bb50ee75a2522f7dde
+
 		
 		/*
 		LocalTime starttime = LocalTime.of(Integer.parseInt(mintime[0]),
