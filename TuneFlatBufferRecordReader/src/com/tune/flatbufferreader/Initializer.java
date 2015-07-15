@@ -42,12 +42,12 @@ public class Initializer {
 
 	public static void main(String[] args) throws SQLException, IOException,
 			ClassNotFoundException, JSONException, InterruptedException {
-/*
-		if (args.length == 0) {
+
+		if (args.length == 0 || args.length > 1) {
 			System.out.println("To run this jar: java -jar <jarname> <JSON local file path>  <~/hadoop/etc/hadoop/core-site.xml>");
 			System.exit(0);
 		}
-*/
+
 		System.out.println("Starting the parser");
 		List<String> files = new ArrayList<String>();
 		List<String> folders = new ArrayList<String>();
@@ -59,7 +59,7 @@ public class Initializer {
 		JSONParser parser = new JSONParser();
 		try {
 
-			Object obj = parser.parse(new FileReader("/home/devang/Desktop/IMP/property.json"));
+			Object obj = parser.parse(new FileReader(args[0]));
 			jsonArray = (JSONObject) obj;
 
 		} catch (ParseException e) {
@@ -80,15 +80,7 @@ public class Initializer {
 		String[] mintime = min[1].split(":");
 		String[] maxtime = max[1].split(":");
 		System.out.println("min" + min[0]);
-		/*Date startdate1 = new Date(Integer.parseInt(mindate[0]),
-				Integer.parseInt(mindate[1]) - 1, Integer.parseInt(mindate[2]));
-		Date enddate1 = new Date(Integer.parseInt(maxdate[0]),
-				Integer.parseInt(maxdate[1]) - 1, Integer.parseInt(maxdate[2]));
-		Time starttime1 = new Time(Integer.parseInt(mintime[0]),
-				Integer.parseInt(mintime[1]), Integer.parseInt(mintime[2]));
-		Time endtime1 = new Time(Integer.parseInt(maxtime[0]),
-				Integer.parseInt(maxtime[1]), Integer.parseInt(maxtime[2]));*/
-		
+	
 		
 		LocalTime starttime = LocalTime.of(Integer.parseInt(mintime[0]),
 				Integer.parseInt(mintime[1]), Integer.parseInt(mintime[2]));
@@ -118,7 +110,7 @@ public class Initializer {
 		String sequence_num = (String) jsonArray.get("Sequence_num");
 		
 		Configuration conf = new Configuration();
-		conf.addResource(new Path("/home/devang/Documents/hadoop/etc/hadoop/core-site.xml"));
+		conf.addResource(new Path(args[1]));
 		FileSystem fs1 = FileSystem.get(conf);
 		
 		folders = Utility.getfoldernames(startdate, enddate);
