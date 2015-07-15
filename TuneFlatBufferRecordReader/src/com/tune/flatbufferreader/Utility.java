@@ -41,10 +41,6 @@ import org.apache.hadoop.hive.ql.exec.ByteWritable;
 import org.apache.hadoop.io.BytesWritable;
 import org.mortbay.io.BufferDateCache;
 
-
-
-
-
 import com.tune.flatbufferreader.FileReader;
 import com.tune.flatbufferreader.Rawlog;
 import com.tune.flatbufferreader.Reader;
@@ -70,7 +66,7 @@ public class Utility {
 			e.printStackTrace();
 		}
 	 
-			con = DriverManager.getConnection("jdbc:hive2://localhost:10000/default", "hadoop", "");
+			con = DriverManager.getConnection("jdbc:hive2://localhost:10000/default", "", "");
 			System.out.println(con.getWarnings());
 		
 		
@@ -111,14 +107,14 @@ public class Utility {
 	
 	/*This method goes through each file in the files list and parse/filters the data that are requested.
 	 * It writes the extracted data to the HDFS file and then call the loadtohive function to load that data to the hive table.*/
-	
-	
-	public static void getdata(List<String> files, LocalTime starttime,
-			LocalTime endtime, Configuration conf, String driverName) throws IOException, ClassNotFoundException, InterruptedException {
+	public static void getdata(List<String> files, Time starttime,
+			Time endtime, Configuration conf, String driverName) throws IOException, ClassNotFoundException,  InterruptedException {
+		
+		//List<String> files = new ArrayList<String>();
 		byte[] data =null;
 		
 		FileSystem fs = FileSystem.get(conf);
-		Path po= new Path("/authoritative/output.csv"); //It is used to load the data back to the HIVE. We are writing it to the HDFS file and then loading it into the HIVE.
+		Path po= new Path("/authoritative/output.csv");
 		FSDataOutputStream out = fs.create(po);
 		
 		 
@@ -156,7 +152,7 @@ public class Utility {
 			
 				}
 				
-			if(k==0)  ///to check the edge cases in the files list. For the first file.
+			if(k==0)
 			{
 				System.out.println("data from file"+files.get(k));
 				
@@ -177,11 +173,10 @@ public class Utility {
 				String[] logtime = rl.created().split(" ");
 				String[] cur = logtime[1].split(":");
 				System.out.println(logtime[0]+ " "+ logtime[1]);
-				LocalTime currentTime = LocalTime.of(Integer.parseInt(cur[0]),Integer.parseInt(cur[1]),Integer.parseInt(cur[2]));
-
-				//Time curtime = new Time(Integer.parseInt(cur[0]),Integer.parseInt(cur[1]),Integer.parseInt(cur[2]));
-				//String[] time=logtime[1].split(":");
-				if( currentTime.isAfter(starttime) || currentTime.equals(starttime))
+			
+				Time curtime = new Time(Integer.parseInt(cur[0]),Integer.parseInt(cur[1]),Integer.parseInt(cur[2]));
+				String[] time=logtime[1].split(":");
+				if( curtime.after(starttime) || curtime.equals(starttime))
 				{
 					
 					out.writeBytes(logtime[0]+","+logtime[1]+"\n");
@@ -211,11 +206,11 @@ public class Utility {
 					String[] logtime = rl.created().split(" ");
 					String[] cur = logtime[1].split(":");
 					System.out.println(logtime[0]+ " "+ logtime[1]);
-					LocalTime currentTime = LocalTime.of(Integer.parseInt(cur[0]),Integer.parseInt(cur[1]),Integer.parseInt(cur[2]));
-					//Time curtime = new Time(Integer.parseInt(cur[0]),Integer.parseInt(cur[1]),Integer.parseInt(cur[2]));
-					//String[] time=logtime[1].split(":");
-					//System.out.println(curtime);
-					if( currentTime.isBefore(endtime) || currentTime.equals(endtime))
+				
+					Time curtime = new Time(Integer.parseInt(cur[0]),Integer.parseInt(cur[1]),Integer.parseInt(cur[2]));
+					String[] time=logtime[1].split(":");
+					System.out.println(curtime);
+					if( curtime.before(endtime) || curtime.equals(endtime))
 					{
 						out.writeBytes(logtime[0]+","+logtime[1]+"\n");
 						System.out.println("This is the record: "+" "+rl.created());
@@ -239,7 +234,7 @@ public class Utility {
 			ByteBuffer br = ByteBuffer.wrap(record);
 			rl = Rawlog.getRootAsrawLog(br);
 			String[] logtime = rl.created().split(" ");
-			//String[] time=logtime[1].split(":");
+			String[] time=logtime[1].split(":");
 			out.writeBytes(logtime[0]+","+logtime[1]+"\n");
 			System.out.println("This is the record: "+" "+rl.created());
 	
@@ -255,7 +250,10 @@ public class Utility {
 			e.printStackTrace();
 		}
 		
+		
 	}
+	
+	
 	
 	/*This method filter out the files which are needed form the folders that are generated in the folders list.
 	 * Stores the filtered required filenames to the files arraylist.*/	
@@ -275,22 +273,24 @@ public class Utility {
 			FileStatus[] status;
 			try {
 				status = fs1.listStatus(folder);
+				System.out.println("sttus : "+status.length);
 				for(int p=0; p<status.length; p++ )
 				{
 					String file = status[p].getPath().getName();
-					//System.out.println("file is: "+file);
+					System.out.println("file is: "+file);
 					for ( int s =0 ; s< patterns.size(); s++)
 					{
-						System.out.println("pattern matching:"+file);
+						//System.out.println("pattern matching:"+file);
 						if(file.matches(patterns.get(s)))
 						{
 							System.out.println("String matches: "+ file + "with "+ patterns.get(s));
 							files.add(f+"/"+file);
-							break;
+							s= patterns.size();
 						}
 					}
 					
 				}
+				System.out.println("file size :"+files.size());
 			} catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
 				file_not_found.add(folder.toString());
@@ -383,21 +383,20 @@ public class Utility {
 	 * provided as MIN and MAX in the JSON.
 	 * It creates the folder names that actually exists in the HDFS or s3 buckets. This folders will contain the file that are requested.
 	 */
+public static List<String> getfoldernames( Date startdate, Date enddate) {
 		
-	public static List<String> getfoldernames( LocalDate startdate, LocalDate enddate) {
-		
-		List<String> folders = new ArrayList<String>();
-		//List<Date> dates = new ArrayList<Date>();
-		//Calendar calendar = new GregorianCalendar();
-	//	calendar.setTimeZone(startdate);
+		List<String> folders= new ArrayList<String>();
+		List<Date> dates = new ArrayList<Date>();
+		Calendar calendar = new GregorianCalendar();
+		calendar.setTime(startdate);
 		 
-		while( (startdate.isBefore(enddate)) || startdate.equals(enddate))
+		while( (calendar.getTime().before(enddate)) || calendar.getTime().equals(enddate))
 		{
-			//Date resultdate = calendar.getTime();
-			//dates.add(resultdate);
-			String foldername = "/authoritative/"+startdate.getYear()+"/"+String.format("%02d",(startdate.getMonthValue()))+"/"+String.format("%02d",startdate.getDayOfMonth());
+			Date resultdate = calendar.getTime();
+			dates.add(resultdate);
+			String foldername = "/authoritative/"+resultdate.getYear()+"/"+String.format("%02d",(resultdate.getMonth()+1))+"/"+String.format("%02d",resultdate.getDate());
 			System.out.println(foldername);
-			startdate = startdate.plusDays(1);
+			calendar.add(Calendar.DATE,1);
 			folders.add(foldername);
 		}
 		return folders;

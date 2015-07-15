@@ -2,12 +2,12 @@ package com.tune.flatbufferreader;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.sql.Time;
-import java.util.Date;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -59,7 +59,8 @@ public class Initializer {
 		JSONParser parser = new JSONParser();
 		try {
 
-			Object obj = parser.parse(new FileReader("/home/devang/Desktop/IMP/property.json"));
+			//Object obj = parser.parse(new FileReader("/home/devang/Desktop/IMP/property.json"));
+			Object obj = parser.parse(new FileReader("/home/hadoop/devang/property.json"));
 			jsonArray = (JSONObject) obj;
 
 		} catch (ParseException e) {
@@ -80,16 +81,16 @@ public class Initializer {
 		String[] mintime = min[1].split(":");
 		String[] maxtime = max[1].split(":");
 		System.out.println("min" + min[0]);
-		/*Date startdate1 = new Date(Integer.parseInt(mindate[0]),
+		Date startdate = new Date(Integer.parseInt(mindate[0]),
 				Integer.parseInt(mindate[1]) - 1, Integer.parseInt(mindate[2]));
-		Date enddate1 = new Date(Integer.parseInt(maxdate[0]),
+		Date enddate = new Date(Integer.parseInt(maxdate[0]),
 				Integer.parseInt(maxdate[1]) - 1, Integer.parseInt(maxdate[2]));
-		Time starttime1 = new Time(Integer.parseInt(mintime[0]),
+		Time starttime = new Time(Integer.parseInt(mintime[0]),
 				Integer.parseInt(mintime[1]), Integer.parseInt(mintime[2]));
-		Time endtime1 = new Time(Integer.parseInt(maxtime[0]),
-				Integer.parseInt(maxtime[1]), Integer.parseInt(maxtime[2]));*/
+		Time endtime = new Time(Integer.parseInt(maxtime[0]),
+				Integer.parseInt(maxtime[1]), Integer.parseInt(maxtime[2]));
 		
-		
+		/*
 		LocalTime starttime = LocalTime.of(Integer.parseInt(mintime[0]),
 				Integer.parseInt(mintime[1]), Integer.parseInt(mintime[2]));
 		LocalTime endtime = LocalTime.of(Integer.parseInt(maxtime[0]),
@@ -97,7 +98,7 @@ public class Initializer {
 		LocalDate startdate = LocalDate.of(Integer.parseInt(mindate[0]),
 				Integer.parseInt(mindate[1]), Integer.parseInt(mindate[2]));
 		LocalDate enddate = LocalDate.of(Integer.parseInt(maxdate[0]),
-				Integer.parseInt(maxdate[1]), Integer.parseInt(maxdate[2]));
+				Integer.parseInt(maxdate[1]), Integer.parseInt(maxdate[2]));*/
 		
 		
 		//reads prison id from json file
