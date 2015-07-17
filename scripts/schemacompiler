@@ -1,0 +1,90 @@
+# Its a Schema compiler script
+# To Run:
+# ~./schemacompiler -s "<schema>" -f "<Flatbuffer complier>" -c "<Scala case compiler>" -o "<Output path>"
+#
+function HELP {
+  echo "Help documentation for SchemaCompiler."
+  echo "Usage: ~./schemacompiler -s <schema> -f <Flatbuffer complier> -c <Scala case compiler> -o <Output path>"\\n
+  echo "Command line switches are optional. The following switches are recognized."
+  echo "-s  --Sets the value for schema."
+  echo "-f --Sets the value for faltbuffer compiler."
+  echo "-c  --Sets the value for scala compiler."
+  echo "-o --Sets the value for outputpath."
+  echo "-h  --Displays this help message."\\n
+  exit 1
+}
+
+
+while getopts :s:f:c:o:h FLAG
+ do
+  case $FLAG in
+    s)  #set option "s"
+      schema=$OPTARG
+      #echo "schema: $OPTARG"
+      ;;
+    f)  #set option "f"
+      flatbuffer_compiler=$OPTARG
+      #echo "flatbuffer: $OPTARG"
+      ;;
+    c)  #set option "c"
+      scala_case_compiler=$OPTARG
+      echo "scala compiler: $OPTARG"
+      ;;
+    o)  #set option "o"
+      output_path=$OPTARG
+      #echo "output path: $OPTARG"
+      ;;
+    h)  #show help
+      HELP
+      ;;
+  esac
+done
+
+if [ $# -eq 0 ]
+then 
+echo "Not all the parametes are given"
+echo "Run the script like:"
+echo "./schemacompiler -s <schema file> -f <flatbuffer flatc path> -c <scala case gen path> -o <outputpath> "
+echo "Use -h option to show help."
+else
+   if [ ! -n "$output_path" ]
+   then
+   echo "Give output path by option -o"
+   else
+	if [ ! -n "$schema" ]
+	then
+	    echo "Give the schema to compile"
+	else
+	    if [ ! -n "$flatbuffer_compiler" ]
+	    then
+		echo "No faltbuffer compiler. Set this by option -f."
+		
+		echo "Use option -h for help."
+	    else
+		if [ -d $flatbuffer_compiler ] 
+		then
+			cd $flatbuffer_compiler
+			./flatc -j $schema	
+			cp -r com $output_path/flatbuffer
+		else 
+			echo "Only give the path to the flatc compiler"
+			echo "Like: /user/faltbuffers/ which contains the compiler" 
+		fi
+	    fi
+	    if [ ! -n "$scala_case_compiler" ]
+	    then
+		echo "No scala generator. Set this by option -c"
+		echo "Use option -h for help."
+	    else
+		if [ -d $scala_case_compiler ]
+		then
+			echo "Give the full path to Scala case generator"
+			echo "For example: /user/scala/scalagen.jar "
+		else
+			mkdir $output_path/scala
+			java -jar $scala_case_compiler $schema $output_path/scala/caseFile.txt
+		fi
+	    fi
+	fi
+    fi
+fi
