@@ -61,11 +61,10 @@ public class CaseClassCreator {
 				line[1] = Character.toUpperCase(line[1].charAt(0))
 						+ line[1].substring(1);
 			}
-			// System.out.println(line[1]);
+	
 			list.add(line);
 
-			//// pw.println("case class "+line[0]+"( var "+line[0]+": "+line[1]+")");
-
+		
 		}
 
 		String[] fields = list.get(0);
@@ -90,9 +89,6 @@ public class CaseClassCreator {
 			str1.append(", \n");
 			str1.append("rl." + methodList.get(i));
 
-			/*
-			 * if(i%10==0 ){ str.append("\n"); str1.append("\n"); }
-			 */
 
 		}
 
@@ -108,7 +104,7 @@ public class CaseClassCreator {
 
 	/**
 	 * 
-	 * @param fields a string array each of which includes filed and types.
+	 * @param fields a string array each of which includes fieled and types.
 	 */
 
 	private static void convertToMethod(String[] fields) {
